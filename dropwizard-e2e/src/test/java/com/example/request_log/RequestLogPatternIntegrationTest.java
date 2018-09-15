@@ -1,6 +1,6 @@
 package com.example.request_log;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
 import java.nio.file.Files;

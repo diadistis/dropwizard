@@ -4,11 +4,10 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.util.StatusPrinter;
 import com.codahale.metrics.MetricRegistry;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
@@ -17,26 +16,28 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class DefaultLoggingFactoryPrintErrorMessagesTest {
+    @SuppressWarnings("NullAway")
+    @TempDir
+    static Path tempDir;
 
-    @Rule
-    public final TemporaryFolder tempDir = new TemporaryFolder();
+    private DefaultLoggingFactory factory;
+    private ByteArrayOutputStream output;
 
-    DefaultLoggingFactory factory;
-    ByteArrayOutputStream output;
-
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         output = new ByteArrayOutputStream();
         factory = new DefaultLoggingFactory(new LoggerContext(), new PrintStream(output));
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         factory.stop();
     }
@@ -76,7 +77,7 @@ public class DefaultLoggingFactoryPrintErrorMessagesTest {
 
     @Test
     public void testWhenFileAppenderDoesNotHaveWritePermissionToFolder_PrintsErrorMessageToConsole() throws Exception {
-        File folderWithoutWritePermission = tempDir.newFolder("folder-without-write-permission");
+        File folderWithoutWritePermission = Files.createFile(tempDir.resolve("folder-without-write-permission")).toFile();
         assumeTrue(folderWithoutWritePermission.setWritable(false));
 
         configureLoggingFactoryWithFileAppender(folderWithoutWritePermission);
@@ -87,7 +88,7 @@ public class DefaultLoggingFactoryPrintErrorMessagesTest {
 
     @Test
     public void testWhenSettingUpLoggingWithValidConfiguration_NoErrorMessageIsPrintedToConsole() throws Exception {
-        File folderWithWritePermission = tempDir.newFolder("folder-with-write-permission");
+        File folderWithWritePermission = Files.createDirectory(tempDir.resolve("folder-with-write-permission")).toFile();
 
         configureLoggingFactoryWithFileAppender(folderWithWritePermission);
 
